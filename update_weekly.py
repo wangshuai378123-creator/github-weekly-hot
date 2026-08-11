@@ -1,26 +1,24 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
-GitHub 每周热点 · 更新脚本
+GitHub 热点周报 · 每周更新脚本（可移植版，支持 GitHub Actions）
 用法: python update_weekly.py <YYYYMMDD> [--label W33] [--range "08.11 — 08.16"]
       (可选 --highlights "A|B|C" --trends "T1|T2")
+日期参数: 通常传"周一(发布日)"，脚本会从榜单文件头部解析真实周结束日(周日)。
 
 流程:
-  1. 从 OpenGithubs/github-weekly-rank 下载当周榜单 md
+  1. 从 OpenGithubs/github-weekly-rank 下载当周榜单 md（自动回退近几天）
   2. 解析 Top12 仓库 (总 Star 与周增长)
-  3. 为新增仓库拉取 GitHub API 元数据与中文说明
-  4. 追加到 github-trending-data.js (保留历史周)
-
-认证: 优先使用环境变量 GH_TOKEN, 否则读取本机 gh 配置。
+  3. 为新增仓库拉取 GitHub API 元数据（优先 NOTES 中文说明，否则自动摘要）
+  4. 追加到 github-trending-data.js (保留历史周, 幂等)
 """
-import json, os, re, sys, urllib.request, urllib.parse, datetime, time
+import json, os, re, sys, urllib.request, urllib.parse, urllib.error, datetime, time
 from concurrent.futures import ThreadPoolExecutor
 
 VIZ = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(VIZ, 'github-trending-data.js')
-TOKEN_FILE = os.path.expandvars(r'%APPDATA%\GitHub CLI\hosts.yml')
-REPO_RE = r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+'
+TOKEN_FILE = r'C:\Users\Administrator\AppData\Local\Programs\GitHubCLI\.config\hosts.yml'
 
-# 中文说明库: repo -> (作用, 意义)
+# 已知仓库中文说明 (作用, 意义)
 NOTES = {
  'diegosouzapw/OmniRoute': ('免费 AI 网关，一个端点接入 231+ 模型服务商，自动路由与压缩。', '开发者无需逐个对接各家 API 即可切换 Claude/GPT/Gemini，显著降低调用与迁移成本。'),
  'stablyai/orca': ('Stability AI 开源的图像生成模型。', '提供可自托管的高质量文生图能力，推动开源 AIGC 与闭源产品竞争。'),
@@ -62,16 +60,38 @@ def to_num(s):
     elif u in ('w', '万'): v *= 10000
     return int(v)
 
-def fetch(url, timeout=40, retries=5):
+def fetch(url, timeout=40, retries=3):
+    """下载文件; 404 返回 None (用于日期回退); 其他错误重试"""
     last = None
     for i in range(retries):
         try:
             req = urllib.request.Request(url, headers={'User-Agent': 'Codex'})
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 return r.read()
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return None
+            last = e; time.sleep(2)
         except Exception as e:
             last = e; time.sleep(2)
     raise last
+
+def get_token():
+    tok = os.environ.get('GH_TOKEN') or os.environ.get('GITHUB_TOKEN')
+    if tok:
+        return tok.strip()
+    if os.path.exists(TOKEN_FILE):
+        txt = open(TOKEN_FILE, encoding='utf-8').read()
+        m = re.search(r'oauth_token:\s*"?([A-Za-z0-9_]+)"?', txt)
+        if m:
+            return m.group(1)
+    raise SystemExit('未找到 GitHub token：请设置 GH_TOKEN/GITHUB_TOKEN 环境变量，或确保本地 hosts.yml 存在')
+
+def api_get(path, token):
+    url = 'https://api.github.com/' + path
+    req = urllib.request.Request(url, headers={'User-Agent': 'Codex', 'Authorization': 'Bearer ' + token})
+    with urllib.request.urlopen(req, timeout=40) as r:
+        return json.loads(r.read())
 
 def parse_table(text):
     rows = []
@@ -87,27 +107,28 @@ def parse_table(text):
                      'stars': to_num(cells[2]), 'week': to_num(cells[3])})
     return rows
 
-def api_get(path, token):
-    url = 'https://api.github.com/' + path
-    req = urllib.request.Request(url, headers={'User-Agent': 'Codex', 'Authorization': 'Bearer ' + token})
-    with urllib.request.urlopen(req, timeout=40) as r:
-        return json.loads(r.read())
+def parse_week_end(text, date_str):
+    """优先从文件头部 '## YYYY.MM.DD' 解析周结束日(周日); 否则用日期参数-1天"""
+    m = re.search(r'##\s*(\d{4})\.(\d{2})\.(\d{2})', text)
+    if m:
+        return datetime.date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+    y, m, d = date_str[:4], date_str[4:6], date_str[6:8]
+    return datetime.date(int(y), int(m), int(d)) - datetime.timedelta(days=1)
 
-def get_token():
-    tok = os.environ.get('GH_TOKEN') or os.environ.get('GITHUB_TOKEN')
-    if tok: return tok
-    try:
-        txt = open(TOKEN_FILE, encoding='utf-8').read()
-        m = re.search(r'oauth_token:\s*"?([A-Za-z0-9_]+)"?', txt)
-        if m: return m.group(1)
-    except Exception:
-        pass
-    return None
+def make_summary(repo, meta, row, rank):
+    """NOTES 未收录的新仓库: 用描述自动生成 作用/意义"""
+    desc = (meta.get('desc') or '').strip()
+    if desc:
+        purpose = desc if len(desc) >= 8 else desc + '，本周 GitHub 热门开源项目。'
+    else:
+        purpose = f'{repo} 是本周 GitHub 热门开源项目。'
+    significance = f'本周热榜第 {rank} 名，周增 {row["week"]:,}★，总 Star {row["stars"]:,}，社区关注度持续走高。'
+    return purpose[:160], significance[:160]
 
 def main():
     if len(sys.argv) < 2:
         print(__doc__); return
-    date_str = sys.argv[1]
+    date_str = sys.argv[1]  # YYYYMMDD (通常是周一发布日)
     label = None; rng = None; highlights = []; trends = []
     i = 2
     while i < len(sys.argv):
@@ -117,29 +138,43 @@ def main():
         elif sys.argv[i] == '--trends': trends = sys.argv[i+1].split('|'); i += 2
         else: i += 1
 
-    y, m, d = date_str[:4], date_str[4:6], date_str[6:8]
-    url = f'https://raw.githubusercontent.com/OpenGithubs/github-weekly-rank/main/{y}/{m}/{date_str}.md'
-    print('下载:', url)
-    try:
-        raw = fetch(url).decode('utf-8', 'ignore')
-    except Exception as e:
-        print('本周数据尚未发布, 跳过 (', e, ')')
-        return
-    rows = parse_table(raw)[:12]
+    # 尝试下载榜单: 从给定日期回退最多 4 天 (应对 cron 延迟)
+    raw = None; used_date = None
+    d0 = datetime.date(int(date_str[:4]), int(date_str[4:6]), int(date_str[6:8]))
+    for k in range(4):
+        cand = (d0 - datetime.timedelta(days=k)).strftime('%Y%m%d')
+        y, m, d = cand[:4], cand[4:6], cand[6:8]
+        url = f'https://raw.githubusercontent.com/OpenGithubs/github-weekly-rank/main/{y}/{m}/{cand}.md'
+        print('尝试下载:', url)
+        data = fetch(url)
+        if data is not None:
+            raw = data; used_date = cand; break
+    if raw is None:
+        print('未找到榜单文件（已回退尝试最近 4 天）'); return
+
+    text = raw.decode('utf-8', 'ignore')
+    rows = parse_table(text)[:12]
     if not rows:
-        print('未解析到榜单行, 跳过'); return
-    end = datetime.date(int(y), int(m), int(d))
-    start = end - datetime.timedelta(days=6)
+        print('警告: 未解析到榜单行, 请检查文件格式'); return
+
+    end = parse_week_end(text, used_date)
     if not label:
         label = 'W' + str(end.isocalendar()[1])
     if not rng:
+        start = end - datetime.timedelta(days=5)   # 周二 → 周日
         rng = f'{start.month:02d}.{start.day:02d} — {end.month:02d}.{end.day:02d}'
 
-    data = json.loads(re.sub(r'^window\.GH_DATA\s*=\s*', '', open(DATA_FILE, encoding='utf-8').read().rstrip().rstrip(';')))
-    token = get_token()
+    with open(DATA_FILE, encoding='utf-8') as f:
+        data = json.loads(re.sub(r'^window\.GH_DATA\s*=\s*', '', f.read().rstrip().rstrip(';')))
 
+    if any(w.get('id') == label for w in data['weeks']):
+        print(f'{label} 已存在于数据中，跳过（幂等，不重复追加）')
+        return
+
+    token = get_token()
     existing = set(data['repos'].keys())
     new_repos = [r['repo'] for r in rows if r['repo'] not in existing]
+
     def meta(repo):
         try:
             d = api_get('repos/' + urllib.parse.quote(repo), token)
@@ -149,29 +184,37 @@ def main():
                           'created': (d.get('created_at') or '')[:10],
                           'stars': d.get('stargazers_count', 0), 'forks': d.get('forks_count', 0),
                           'purpose': note[0], 'significance': note[1], 'history': {}}
-        except Exception as e:
+        except Exception:
             return repo, None
+
     with ThreadPoolExecutor(max_workers=8) as ex:
         metas = dict(ex.map(meta, new_repos))
-    for r in rows:
+
+    for rank, r in enumerate(rows, 1):
         repo = r['repo']
         if repo in data['repos']:
             data['repos'][repo]['history'][label] = r['stars']
         elif repo in metas and metas[repo]:
-            mm = dict(metas[repo]); mm['history'] = {label: r['stars']}
-            data['repos'][repo] = mm
+            m = dict(metas[repo]); m['history'] = {label: r['stars']}
+            if not m.get('purpose'):
+                purpose, significance = make_summary(repo, m, r, rank)
+                m['purpose'] = purpose; m['significance'] = significance
+            data['repos'][repo] = m
+
     if not highlights:
         for r in rows[:3]:
-            dd = data['repos'].get(r['repo'], {})
-            highlights.append(f"{r['repo']} 周增 {r['week']:,}★ — {(dd.get('significance') or dd.get('desc') or '')[:40]}")
+            d = data['repos'].get(r['repo'], {})
+            highlights.append(f"{r['repo']} 周增 {r['week']:,}★ — {(d.get('significance') or d.get('desc') or '')[:40]}")
     if not trends:
         trends = ['AI Agent 生态持续升温', '本地推理平民化', '大厂加速开源', '开发工具链 AI 化']
-    data['weeks'].append({'id': label, 'range': rng, 'end': f'{y}-{m}-{d}',
+
+    data['weeks'].append({'id': label, 'range': rng, 'end': end.isoformat(),
                           'repos': rows, 'highlights': highlights, 'trends': trends})
     data['generated'] = datetime.date.today().isoformat()
+
     with open(DATA_FILE, 'w', encoding='utf-8') as f:
         f.write('window.GH_DATA = ' + json.dumps(data, ensure_ascii=False) + ';\n')
-    print(f'完成: 追加 {label} ({rng}), 共 {len(data["weeks"])} 周, 仓库 {len(data["repos"])} 个')
+    print(f'完成: 已追加 {label} ({rng}), 共 {len(data["weeks"])} 周, 仓库 {len(data["repos"])} 个')
 
 if __name__ == '__main__':
     main()
