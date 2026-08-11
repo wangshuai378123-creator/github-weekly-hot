@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub 每周热点 · style-dark</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><circle cx=%228%22 cy=%228%22 r=%227%22 fill=%22%237c9cff%22/></svg>">
+<style>
+
+:root{--bg:#0a0d12;--surface:#12161d;--surface2:#181d26;--text:#e8ecf3;--muted:#8b95a5;--faint:#5c6574;--line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.13);--acc:#4cc2ff;--acc2:#8b7bff;--green:#3ddc97;--mono:"SF Mono","Cascadia Code",Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Inter","PingFang SC","Microsoft YaHei",sans-serif;--radius:14px}
+html[data-theme="light"]{--bg:#f6f8fb;--surface:#fff;--surface2:#eef2f7;--text:#151b26;--muted:#566072;--faint:#8a93a3;--line:rgba(15,25,45,.08);--line2:rgba(15,25,45,.16);--acc:#1f7fe0;--acc2:#6d5ae6;--green:#0d9b63}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;transition:background .35s}
+.wrap{max-width:880px;margin:0 auto;padding:0 22px}
+a{color:inherit;text-decoration:none}
+header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:color-mix(in srgb,var(--bg) 78%,transparent);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:58px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14.5px}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));box-shadow:0 0 12px var(--acc)}
+.brand .sub{color:var(--faint);font-weight:500;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em}
+.theme-btn{border:1px solid var(--line);background:transparent;color:var(--muted);width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:15px;display:grid;place-items:center;transition:.2s}
+.theme-btn:hover{color:var(--text);border-color:var(--line2)}
+main{padding:46px 0 20px}
+.eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint)}
+h1{font-size:clamp(28px,4.6vw,44px);font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-top:10px}
+h1 em{font-style:normal;background:linear-gradient(100deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--muted);font-size:14px;margin-top:12px}
+.lead b{color:var(--text)}
+.weeks{display:flex;gap:6px;margin:30px 0 10px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow-x:auto;max-width:100%}
+.week-btn{padding:8px 16px;border-radius:9px;border:0;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;transition:.15s;flex-shrink:0}
+.week-btn small{display:block;font-family:var(--mono);font-weight:400;font-size:9.5px;color:var(--faint)}
+.week-btn:hover{color:var(--text)}
+.week-btn.active{background:var(--surface2);color:var(--text);box-shadow:0 1px 6px rgba(0,0,0,.3)}
+.week-btn .cur{margin-left:5px;padding:1px 7px;border-radius:999px;font-size:9.5px;font-weight:700;background:var(--acc);color:#04121f;vertical-align:1px}
+.toolbar{display:flex;align-items:center;gap:10px;margin:18px 0 22px}
+.search{flex:1}
+.search input{width:100%;padding:9px 13px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:13.5px;font-family:inherit;outline:none}
+.search input:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 18%,transparent)}
+.toolbar select{padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:13px;font-family:inherit;cursor:pointer;outline:none}
+.list-head{display:flex;align-items:baseline;gap:10px;margin:4px 0 12px}
+.list-head h2{font-size:15px;font-weight:700}
+.list-head .meta{color:var(--faint);font-size:12px;font-family:var(--mono)}
+.list{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden}
+.repo{display:grid;grid-template-columns:40px 1fr auto;gap:16px;align-items:center;padding:18px;border-bottom:1px solid var(--line);transition:background .15s}
+.repo:last-child{border-bottom:0}
+.repo:hover{background:var(--surface2)}
+.rank{font-family:var(--mono);font-size:13px;color:var(--faint);text-align:center}
+.rank.top{font-size:17px}
+.main{min-width:0}
+.name{font-weight:700;font-size:15.5px;display:flex;align-items:center;gap:8px}
+.name .langdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.name a:hover{color:var(--acc)}
+.note{margin-top:6px;font-size:14px;line-height:1.6}
+.note .p{color:var(--muted)}
+.note .s{color:var(--text);margin-top:2px}
+.note b{display:inline-block;margin-right:7px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent);padding:1px 7px;border-radius:6px;vertical-align:1px}
+.meta2{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-top:6px}
+.side{display:flex;align-items:center;gap:14px}
+.delta{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--green);white-space:nowrap}
+.delta .unit{color:var(--faint);font-weight:500;font-size:10.5px;margin-right:3px}
+.spark{color:var(--acc);flex-shrink:0}
+.go{color:var(--faint);font-size:15px;transition:.15s}
+.go:hover{color:var(--acc);transform:translateX(2px)}
+.more{display:block;width:100%;padding:13px;border:0;background:transparent;color:var(--muted);font-size:13px;font-family:inherit;cursor:pointer}
+.more:hover{color:var(--acc);background:var(--surface2)}
+.empty{padding:52px 0;text-align:center;color:var(--faint);font-size:13.5px}
+.block{margin-top:46px}
+.block-title{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:16px}
+.block-title::after{content:"";flex:1;height:1px;background:var(--line)}
+.news{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.news-item{display:flex;gap:12px;padding:14px 15px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:13px;transition:border-color .15s}
+.news-item:hover{border-color:var(--line2)}
+.news-item .ic{font-size:16px}
+.news-item .txt{color:var(--muted)}
+.trends{display:flex;flex-wrap:wrap;gap:8px}
+.trend{padding:7px 13px;border:1px solid var(--line);border-radius:999px;font-size:12.5px;color:var(--muted);background:var(--surface)}
+.trend b{color:var(--text)}
+.trend i{color:var(--acc);font-style:normal;font-family:var(--mono);font-size:11px;margin-right:5px}
+footer{border-top:1px solid var(--line);margin-top:52px;padding:22px 0 40px;color:var(--faint);font-size:11.5px}
+footer code{font-family:var(--mono)}
+@media(max-width:640px){.repo{grid-template-columns:30px 1fr;gap:10px;padding:14px}.side{grid-column:2}.toolbar{flex-wrap:wrap}}
+
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <div class="brand"><span class="dot"></span> GitHub 每周热点 <span class="sub">WEEKLY</span></div>
+    <button class="theme-btn" id="themeBtn" type="button" title="切换主题">☾</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section>
+    <p class="eyebrow">Weekly Digest · 每周更新</p>
+    <h1>GitHub 每周热点，<em>持续速览</em></h1>
+    <p class="lead">逐周归档热榜与<b>真实 Star 增长</b>，回顾每一周的高光项目。</p>
+  </section>
+
+  <section class="weeks" id="weekTabs"></section>
+
+  <section class="toolbar">
+    <div class="search"><input id="searchInput" type="text" placeholder="搜索项目…"></div>
+    <select id="langSelect" title="按语言筛选">
+      <option value="ALL">全部语言</option>
+    </select>
+    <select id="sortSelect">
+      <option value="week">本周新增 ↓</option>
+      <option value="stars">总 Star ↓</option>
+      <option value="name">名称 A→Z</option>
+    </select>
+  </section>
+
+  <section>
+    <div class="list-head"><h2 id="weekTitle">热榜</h2><span class="meta" id="weekRange"></span></div>
+    <div class="list" id="repoList"></div>
+  </section>
+
+  <section class="block">
+    <h2 class="block-title">本周动态</h2>
+    <div class="news" id="newsGrid"></div>
+  </section>
+
+  <section class="block">
+    <h2 class="block-title">趋势</h2>
+    <div class="trends" id="trendGrid"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    数据：GitHub Trending 周榜 / REST API 逐周快照 · 曲线由每周存档的真实 Star 累积绘制<br>
+    更新：<code>python update_weekly.py 20260816 --label W33</code> · 生成 2026-08-11
+  </div>
+</footer>
+<script src="github-trending-data.js"></script>
+<script>
+const LANG_COLORS = {
+  'Python':'#3572A5','TypeScript':'#3178c6','Rust':'#dea584','Go':'#00ADD8',
+  'Jupyter Notebook':'#DA5B0B','JavaScript':'#f1e05a','PowerShell':'#012456',
+  'Clojure':'#db5855','C':'#555555','Kotlin':'#A97BFF'
+};
+const DATA = window.GH_DATA || { weeks:[], repos:{} };
+const WEEKS = DATA.weeks || [];
+const REPOS = DATA.repos || {};
+const fmt = n => n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'') + 'k' : String(n);
+
+let state = { week: WEEKS.length ? WEEKS[WEEKS.length-1].id : null, q:'', lang:'ALL', sort:'week', showAll:false };
+
+const weekTabs = document.getElementById('weekTabs');
+const listEl = document.getElementById('repoList');
+const langSel = document.getElementById('langSelect');
+
+function sparkSVG(repoKey, idx){
+  const repo = REPOS[repoKey];
+  if (!repo || !repo.history) return '';
+  const pts = WEEKS.map((w,i)=>({ id:w.id, x:i, y:repo.history[w.id] })).filter(p => p.y != null);
+  if (pts.length < 1) return '';
+  const W=56,H=22,P=3;
+  const ys=pts.map(p=>p.y); const min=Math.min(...ys), max=Math.max(...ys), span=(max-min)||1;
+  const px=i=>P+(W-2*P)*(pts.length===1?0.5:i/(pts.length-1));
+  const py=v=>H-P-(H-2*P)*((v-min)/span);
+  const line=pts.map((p,i)=>`${px(i).toFixed(1)},${py(p.y).toFixed(1)}`).join(' ');
+  const area=`${px(0).toFixed(1)},${H-P} ${line} ${px(pts.length-1).toFixed(1)},${H-P}`;
+  const tt=pts.map(p=>`${p.id} ${p.y.toLocaleString()}`).join(' · ');
+  const gid='g'+idx;
+  return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="currentColor" stop-opacity=".20"/>
+      <stop offset="1" stop-color="currentColor" stop-opacity="0"/>
+    </linearGradient></defs>
+    <title>${tt}</title>
+    <polygon points="${area}" fill="url(#${gid})"/>
+    <polyline points="${line}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+function currentRepos(){
+  const wk = WEEKS.find(w=>w.id===state.week) || WEEKS[WEEKS.length-1];
+  return (wk?wk.repos:[]).map(r=>({ ...r, meta:REPOS[r.repo]||{} }));
+}
+
+function renderLang(){
+  const langs = ['ALL', ...new Set(WEEKS.flatMap(w=>w.repos).map(r=>REPOS[r.repo]&&REPOS[r.repo].lang).filter(Boolean))];
+  langSel.innerHTML = langs.map(l=>`<option value="${l}" ${state.lang===l?'selected':''}>${l==='ALL'?'全部语言':l}</option>`).join('');
+}
+
+function renderList(){
+  let list = currentRepos();
+  if (state.q){ const q=state.q.toLowerCase();
+    list = list.filter(r=>(r.repo+' '+(r.meta.desc||'')).toLowerCase().includes(q)); }
+  if (state.lang!=='ALL') list = list.filter(r=>r.meta.lang===state.lang);
+  list.sort((a,b)=> state.sort==='name' ? a.repo.localeCompare(b.repo)
+      : state.sort==='stars' ? (b.meta.stars||0)-(a.meta.stars||0) : b.week-a.week);
+  if (!list.length){ listEl.innerHTML='<div class="empty">没有匹配的项目</div>'; return; }
+  const visible = state.showAll ? list : list.slice(0,10);
+  const items = visible.map((r,i)=>{
+    const rank = list.indexOf(r)+1, color=LANG_COLORS[r.meta.lang]||'#8b949e';
+    const medal = rank<=3 ? ['🥇','🥈','🥉'][rank-1] : String(rank).padStart(2,'0');
+    return `<article class="repo" style="--i:${Math.min(i,10)}">
+      <div class="rank ${rank<=3?'top':''}">${medal}</div>
+      <div class="main">
+        <div class="name"><span class="langdot" style="background:${color}"></span><a href="${r.meta.url||('https://github.com/'+r.repo)}" target="_blank" rel="noopener">${r.repo}</a></div>
+        <div class="note">
+        <div class="p"><b>作用</b><span>${r.meta.purpose||''}</span></div>
+        <div class="s"><b>意义</b><span>${r.meta.significance||''}</span></div>
+      </div>
+      <div class="meta2">${r.meta.lang||''} · ★${fmt(r.meta.stars||0)}</div>
+      </div>
+      <div class="side">
+        <span class="delta" title="本周新增 Star"><span class="unit">本周</span>+${fmt(r.week)}</span>
+        ${sparkSVG(r.repo, i)}
+        <a class="go" href="${r.meta.url||('https://github.com/'+r.repo)}" target="_blank" rel="noopener" title="在 GitHub 打开">↗</a>
+      </div>
+    </article>`;
+  }).join('');
+  const more = (list.length>10 && !state.showAll)
+    ? `<button class="more" id="moreBtn" type="button">展开其余 ${list.length-10} 个项目 ↓</button>`
+    : '';
+  listEl.innerHTML = items + more;
+  const mb = document.getElementById('moreBtn');
+  if (mb) mb.addEventListener('click', ()=>{ state.showAll=true; renderList(); });
+}
+
+function renderWeek(){
+  const wk = WEEKS.find(w=>w.id===state.week) || WEEKS[WEEKS.length-1];
+  if (!wk) return;
+  document.getElementById('weekTitle').textContent = '热榜 · ' + wk.id;
+  document.getElementById('weekRange').textContent = wk.range + ' · ' + wk.repos.length + ' 个项目';
+  document.getElementById('newsGrid').innerHTML = wk.highlights.map(h =>
+    `<div class="news-item"><span class="ic">✦</span><span class="txt">${h}</span></div>`).join('');
+  document.getElementById('trendGrid').innerHTML = wk.trends.map((t,i)=>
+    `<span class="trend"><i>0${i+1}</i><b>${t}</b></span>`).join('');
+  renderLang(); renderList();
+}
+
+function renderTabs(){
+  weekTabs.innerHTML = WEEKS.map((w,i)=>{
+    const last = i===WEEKS.length-1;
+    return `<button class="week-btn ${w.id===state.week?'active':''}" data-week="${w.id}" type="button">${w.id}${last?'<span class="cur">最新</span>':''}<small>${w.range}</small></button>`;
+  }).join('');
+  weekTabs.querySelectorAll('.week-btn').forEach(b=>b.addEventListener('click',()=>{
+    state.week=b.dataset.week; state.showAll=false; renderTabs(); renderWeek();
+  }));
+}
+
+document.getElementById('searchInput').addEventListener('input', e=>{ state.q=e.target.value.trim(); state.showAll=false; renderList(); });
+document.getElementById('sortSelect').addEventListener('change', e=>{ state.sort=e.target.value; renderList(); });
+langSel.addEventListener('change', e=>{ state.lang=e.target.value; state.showAll=false; renderList(); });
+
+const themeBtn=document.getElementById('themeBtn');
+function applyTheme(t){ document.documentElement.dataset.theme=t;
+  themeBtn.textContent = t==='dark' ? '☀' : '☾';
+  try{ localStorage.setItem('gh-theme',t); }catch(e){} }
+themeBtn.addEventListener('click', ()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark'));
+applyTheme(localStorage.getItem('gh-theme')||'dark');
+
+renderTabs(); renderWeek();
+
+</script>
+</body>
+</html>
